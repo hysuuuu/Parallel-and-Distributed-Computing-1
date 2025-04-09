@@ -36,9 +36,20 @@ int main(int argc, char **argv){
     /*
     ** Print results
     */
-    for(int i=0; i<NUM_MEMS; i++){
-        printf("%.4f\n",avg_access_time[i]);
+    // for(int i=0; i<NUM_MEMS; i++){
+    //     printf("%.4f\n",avg_access_time[i]);
+    // }
+    char filename[20];
+    snprintf(filename, sizeof(filename), "output/%d_%c.txt", procs, dist);
+    FILE *output_file = fopen(filename, "w");
+    if(output_file == NULL){
+        fprintf(stderr, "Error: Could not open file for writing.\n");
+        exit(1);
     }
+    for(int i = 0; i < NUM_MEMS; i++){
+        fprintf(output_file, "%.4f\n", avg_access_time[i]);
+    }
+    fclose(output_file);
     return 0;
     return 0;
 }

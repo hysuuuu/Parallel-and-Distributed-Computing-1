@@ -1,2 +1,2 @@
 all:
-	gcc -o simulator.bin -lm main.c simulator.c
+	gcc -g -o simulator.bin main.c simulator.c -lm

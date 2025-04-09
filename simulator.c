@@ -79,10 +79,11 @@ void simulate(double *avg_access_time,
             if (first_waiting_proc != -1) {
                 int *new_order = (int *)malloc(procs * sizeof(int));
                 for (int i = 0; i < procs; i++) {
-                    new_order[(i + first_waiting_proc) % procs] = i; 
+                    int newIndex = (i + first_waiting_proc) % procs;
+                    new_order[newIndex] = i; 
                 }
                 proc_order = new_order;
-                free(new_order);
+                // free(proc_order);
             }          
             free(paired);
             
