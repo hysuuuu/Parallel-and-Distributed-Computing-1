@@ -51,7 +51,7 @@ void simulate(double *avg_access_time,
 
             for (int i = 0; i < procs; i++) {
                 int proc_idx = proc_order[i];
-                int req = current_request[i];
+                int req = current_request[proc_idx];
                 if (mem_modules[req] == 0) {
                     mem_modules[req] = 1;
                     paired[proc_idx] = 1;
