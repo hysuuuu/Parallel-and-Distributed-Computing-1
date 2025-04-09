@@ -8,6 +8,8 @@
 #include <math.h>
 #include "simulator.h" // implements
 
+#define EPSILON 0.02
+#define MAX_CYCLE 1000000
 double PI_VAL = 3.14159265358979323846;
 
 void simulate(double *avg_access_time,
@@ -15,15 +17,103 @@ void simulate(double *avg_access_time,
               int procs,
               char dist){
 
-    //////////////////////////////////////////////////////
-    // YOUR CODE GOES HERE.
-    // start of useless code. Just delete it.
-    for(int i=0; i<avg_access_time_len; i++){
-        avg_access_time[i] = rand_normal_wrap(75,5,100);
+    for (int m = 1; m <= avg_access_time_len; m++) {
+        int *access_count = (int *)calloc(procs, sizeof(int));
+        int *current_request = (int *)calloc(procs, sizeof(int));
+        int *base_module = NULL;    // for normal distribution
+        if (dist == 'n') base_module = (int *)calloc(procs, sizeof(int));
+
+        for (int p = 0; p < procs; p++) {
+            if (dist == 'n') {
+                base_module[p] = rand_uniform(m);
+                current_request[p] = base_module[p];
+            } else {
+                current_request[p] = rand_uniform(m);
+            }
+        }
+
+        // the first waiting processor is re-labeled with index 0
+        int *proc_order = (int *)malloc(procs * sizeof(int));
+        // initial order
+        for (int i = 0; i < procs; i++) {
+            proc_order[i] = i;
+        }        
+
+        int cycle = 0;
+        double prev_sys_avg = 0.0, curr_sys_avg = 0.0;
+        int all_defined = 0;
+
+        while (cycle < MAX_CYCLE) {
+            cycle++;
+            // 0: free, 1: paired
+            int *mem_modules = (int *)calloc(m, sizeof(int));
+            int *paired = (int *)calloc(procs, sizeof(int));
+
+            for (int i = 0; i < procs; i++) {
+                int proc_idx = proc_order[i];
+                int req = current_request[i];
+                if (mem_modules[req] == 0) {
+                    mem_modules[req] = 1;
+                    paired[proc_idx] = 1;
+                    access_count[proc_idx]++;
+
+                    // generate new request after successful pairing
+                    if (dist == 'n') {
+                        current_request[proc_idx] = rand_normal_wrap(base_module[proc_idx], 5, m);
+                    } else {
+                        current_request[proc_idx] = rand_uniform(m);
+                    }
+                }                          
+            }
+            free(mem_modules);
+            
+            int first_waiting_proc = -1;
+            for (int i = 0; i < procs; i++) {
+                int proc_idx = proc_order[i];
+                if (paired[proc_idx] == 0) {
+                    first_waiting_proc = proc_idx;
+                    break;
+                }
+            }
+            // update next round's order
+            if (first_waiting_proc != -1) {
+                int *new_order = (int *)malloc(procs * sizeof(int));
+                for (int i = 0; i < procs; i++) {
+                    new_order[(i + first_waiting_proc) % procs] = i; 
+                }
+                proc_order = new_order;
+                free(new_order);
+            }          
+            free(paired);
+            
+            all_defined = 1;
+            double sum = 0.0;
+            for (int i = 0; i < procs; i++) {
+                if (access_count[i] == 0) {
+                    all_defined = 0;
+                    break;
+                }
+                sum += ((double)cycle / access_count[i]);
+            }
+            if (all_defined) {
+                curr_sys_avg = sum / procs;
+                if (cycle > 1) {
+                    double diff = fabs(1.0 - (prev_sys_avg / curr_sys_avg));
+                    if (diff < EPSILON)
+                        break;
+                }
+                prev_sys_avg = curr_sys_avg;
+            }            
+        }
+
+        avg_access_time[m - 1] = curr_sys_avg;
+        free(proc_order);
+        free(access_count);
+        free(current_request);
+        if (base_module != NULL) {
+            free(base_module);
+        }            
     }
-    printf("procs: %d\ndist: %c\n", procs, dist);
-    // end of useless code
-    //////////////////////////////////////////////////////
 }
 
 int rand_uniform(int max){
