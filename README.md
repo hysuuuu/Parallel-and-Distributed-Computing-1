@@ -1,1 +1,2 @@
-https://colab.research.google.com/drive/1rQjBSMW_kUiAlT4wP9PL6XqjBWBPqnaw?usp=sharing
+![Simulation Results](images/plot n.png)
+![Simulation Results](images/plot u.png)
