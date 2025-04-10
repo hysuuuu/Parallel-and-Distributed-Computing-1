@@ -71,17 +71,19 @@ void simulate(double *avg_access_time,
             for (int i = 0; i < procs; i++) {
                 int proc_idx = proc_order[i];
                 if (paired[proc_idx] == 0) {
-                    first_waiting_proc = proc_idx;
+                    first_waiting_proc = 1;
                     break;
                 }
             }
             // update next round's order
             if (first_waiting_proc != -1) {
+                int *new_order = (int *)malloc(procs * sizeof(int));
                 for (int i = 0; i < procs; i++) {
-                    int newIndex = (i + first_waiting_proc) % procs;
-                    proc_order[newIndex] = i; 
+                    new_order[i] = proc_order[(first_waiting_proc + i) % procs];
                 }
-            }          
+                free(proc_order);  
+                proc_order = new_order; 
+            }        
             free(paired);
             
             all_defined = 1;
