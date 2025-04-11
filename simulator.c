@@ -31,10 +31,9 @@ void simulate(double *avg_access_time,
                 current_request[p] = rand_uniform(m);
             }
         }
-
-        // the first waiting processor is re-labeled with index 0
+        
+        // proc_orderd[i] is the i-th processor that should be served next round
         int *proc_order = (int *)malloc(procs * sizeof(int));
-        // initial order
         for (int i = 0; i < procs; i++) {
             proc_order[i] = i;
         }        
@@ -43,9 +42,20 @@ void simulate(double *avg_access_time,
         double prev_sys_avg = 0.0, curr_sys_avg = 0.0;
         int all_defined = 0;
 
+        /** 
+        * 1. For each processor, if its requested memory module is free, mark it as paired,
+        *    increment its access counter, and generate a new request.
+        * 2. Rotate the processor order so that the first processor that did 
+        *    not pair becomes the new first processor.
+        * 3. Compute the cumulative average access time from the cycle count
+        *    and access counts of served processors.
+        * 4. If all processors have been served and the relative change in
+        *    average access time is less than EPSILON, terminate the loop.
+        */
         while (cycle < MAX_CYCLE) {
             cycle++;
-            // 0: free, 1: paired
+            // mem_modules[i] = 0 if mem[i] free, otherwise = 1;
+            // paired[i] = 0 if processor[i] is waiting, otherwise = 1;
             int *mem_modules = (int *)calloc(m, sizeof(int));
             int *paired = (int *)calloc(procs, sizeof(int));
 
@@ -57,7 +67,6 @@ void simulate(double *avg_access_time,
                     paired[proc_idx] = 1;
                     access_count[proc_idx]++;
 
-                    // generate new request after successful pairing
                     if (dist == 'n') {
                         current_request[proc_idx] = rand_normal_wrap(base_module[proc_idx], 5, m);
                     } else {
@@ -75,7 +84,7 @@ void simulate(double *avg_access_time,
                     break;
                 }
             }
-            // update next round's order
+            // the first waiting processor is re-labeled with index 0
             if (first_waiting_proc != -1) {
                 int *new_order = (int *)malloc(procs * sizeof(int));
                 for (int i = 0; i < procs; i++) {
